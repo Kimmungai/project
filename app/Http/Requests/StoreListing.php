@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\Validator;
 
 class StoreListing extends FormRequest
 {
@@ -26,7 +28,7 @@ class StoreListing extends FormRequest
         return [
           'agent_id' => 'required|numeric',
           'title' => 'required',
-          'name' => 'required',
+          'name' => 'nullable',
           'type' => 'required|numeric',
           'units' => 'required|numeric',
           'parkingSpaces' => 'nullable|numeric',
@@ -68,7 +70,7 @@ class StoreListing extends FormRequest
           'name.required'  => 'name is required',
           'type.required'  => 'type is required',
           'units.required'  => 'Units is required',
-          'physicalAddress.required'  => 'name is required',
+          'physicalAddress.required'  => 'Physical address is required',
         ];
     }
 
@@ -88,4 +90,16 @@ class StoreListing extends FormRequest
           'physicalAddress' => 'Physical Address',
         ];
     }
+
+    /**
+     * [failedValidation [Overriding the event validator for custom error response]]
+     * @param  Validator $validator [description]
+     * @return [object][object of various validation errors]
+     */
+   public function failedValidation(Validator $validator) {
+
+       throw new HttpResponseException(response()->json($validator->errors(), 422));
+       
+   }
+
 }

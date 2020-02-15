@@ -18,4 +18,8 @@ Route::get('/', function () {
 //listing
 Route::resource('find-a-property','ListingsController');
 //User
-Route::get('{username}','UsersController@show');
+Route::get('username/{username}','UsersController@show');
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');

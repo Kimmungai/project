@@ -22,5 +22,6 @@ $factory->define(Listing::class, function (Faker $faker) {
     return [
         'agent_id' => factory(App\Agent::class)->create()->id,
         'title' => $faker->name,
+        'live' => 1,
     ];
 });

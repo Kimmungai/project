@@ -35,6 +35,7 @@ class CreateListingsTable extends Migration
             $table->string('plotNo')->nullable();
             $table->string('buildingMaterial')->nullable();
             $table->integer('furnished')->nullable();
+            $table->tinyInteger('live')->nullable();
             $table->integer('modernFinishing')->nullable();
             $table->double('advertisingCost')->nullable();
             $table->double('discount')->nullable();

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Listing;
 use App\Http\Controllers\Controller;
 use App\Listing;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreListing;
 
 class ListingApiController extends Controller
 {
@@ -15,7 +16,8 @@ class ListingApiController extends Controller
      */
     public function index()
     {
-        //
+        $listings = Listing::paginate(env('API_PAGINATE_NUM',10));
+        return response()->json($listings,200);
     }
 
     /**
@@ -34,9 +36,10 @@ class ListingApiController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StoreListing $request)
     {
-        //
+        $listing = Listing::create($request->all());
+        return response()->json($listing,200);
     }
 
     /**
@@ -48,7 +51,11 @@ class ListingApiController extends Controller
     public function show($id)
     {
         $listing = Listing::find($id);
-        return $listing;
+
+        if( is_null($listing) )
+          return response()->json(['Message'=>'Record not found'],404);
+
+        return response()->json($listing,200);
     }
 
     /**
@@ -69,9 +76,15 @@ class ListingApiController extends Controller
      * @param  \App\Listing  $listing
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Listing $listing)
+    public function update(Request $request, $id)
     {
-        //
+        $listing = Listing::find($id);
+
+        if( is_null($listing) )
+          return response()->json(['Message'=>'Record not found'],404);
+
+        $listing->update($request->all());
+        return response()->json($listing,200);
     }
 
     /**
@@ -80,8 +93,15 @@ class ListingApiController extends Controller
      * @param  \App\Listing  $listing
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Listing $listing)
+    public function destroy($id)
     {
-        //
+      $listing = Listing::find($id);
+
+      if( is_null($listing) )
+        return response()->json(['Message'=>'Record not found'],404);
+
+      $listing->delete();
+
+      return response()->json(null,204);
     }
 }

@@ -18,9 +18,9 @@ class CreateBookingsTable extends Migration
           $table->string('pickupLocation')->nullable();
           $table->datetime('pickupDate')->nullable();
           $table->text('instruction')->nullable();
-          $table->integer('listingId')->nullable();
-          $table->integer('agentId')->nullable();
-          $table->string('tenantId')->nullable();
+          $table->integer('listing_id')->nullable();
+          $table->integer('agent_id')->nullable();
+          $table->string('tenant_id')->nullable();
           $table->timestamps();
         });
     }

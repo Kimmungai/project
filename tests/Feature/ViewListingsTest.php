@@ -33,7 +33,7 @@ class ViewListingsTest extends TestCase
       ]);
       $agent = $user->agent()->create();
       $agent->listings()->save($listing);
-      $this->get('/kimmnyeri')
+      $this->get('username/kimmnyeri')
            ->assertDontSeeText('Error')
            ->assertSee('New Agent Listing');
     }

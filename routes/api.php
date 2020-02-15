@@ -17,5 +17,8 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-//Listing
-Route::get('get-a-listing/{id}','Listing\ListingApiController@show');
+//Route::group(['middleware'=>'auth:api'], function(){
+  //Listing
+  Route::apiResource('get-a-listing','Listing\ListingApiController');
+  Route::apiResource('media','Listing\MediaApiController');
+//});

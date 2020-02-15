@@ -1,68 +1,252 @@
 <?php
-
-namespace Tests\Feature;
-
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
+namespace App\CustomHelpers\Listing;
 use App\Listing;
-use App\CustomHelpers\Listing\ListingFilters;
 use Carbon\Carbon;
 
-class FilterListingTest extends TestCase
+class ListingFilters
 {
-    use RefreshDatabase;
-
-    public function test_can_filter_listing_ascending()
+    protected static $sortDatesByField = 'created_at';
+   /**
+    * Get live listings ordered based on supplied filters.
+    *
+    * @param   $sortField and $orderBy
+    * @return  $listings
+    */
+    public static function getListingsByOrder( $filters = [] )
     {
-        factory(Listing::class,10)->create();
-        $foundListings = ListingFilters::getListingsByOrder(['sortField'=>'created_at','orderBy' => 'ASC']);
-        $retrivedListings = Listing::all();
-        $this->assertEquals($foundListings[0]['id'],$retrivedListings[0]['id']);
+        $values = self::getOrderByVariables( $filters );
+        return Listing::where('live',1)->orderBy( $values['sortField'], $values['orderBy'] )->get();
     }
 
-    public function test_can_filter_listing_descending()
-    {
-        factory(Listing::class,10)->create();
-        $foundListings = ListingFilters::getListingsByOrder(['orderBy' => 'DESC']);
-        $retrivedListings = Listing::all();
-        $this->assertEquals($foundListings[0]['id'],$retrivedListings[9]['id']);
-    }
+    /**
+     * Get listings with pending ordered based on supplied filters.
+     *
+     * @param   $sortField and $orderBy
+     * @return  $listings
+     */
+     public static function getListingswithPendingByOrder( $filters = [] )
+     {
+         $values = self::getOrderByVariables( $filters );
+         return Listing::orderBy( $values['sortField'], $values['orderBy'] )->get();
+     }
 
-    public function test_can_filter_listing_date()
-    {
-        factory(Listing::class)->create(['title'=>'Created today','created_at' => Carbon::today()]);
-        factory(Listing::class)->create(['title'=>'Created yesterday','created_at' => Carbon::yesterday()]);
-        $foundListings = ListingFilters::getListingsByDate( Carbon::today() );
+     /**
+      * Get pending listings ordered based on supplied filters.
+      *
+      * @param   $sortField and $orderBy
+      * @return  $listings
+      */
+      public static function getPendingListingsByOrder( $filters = [] )
+      {
+          $values = self::getOrderByVariables( $filters );
+          return Listing::where('live',null)->orderBy( $values['sortField'], $values['orderBy'] )->get();
+      }
 
-        $this->assertEquals(count($foundListings),1);
-        $this->assertEquals($foundListings[0]['title'], 'Created today');
-    }
+    /**
+     * Get live listings created certain date.
+     *
+     * @param   $date
+     * @return  $listings
+     */
+     public static function getListingsByDate( $date = null )
+     {
+       if( $date )
+         return Listing::where('live',1)->whereDate('created_at',$date)->get();
+       else
+         return Listing::where('live',1)->gets();
+     }
 
-    public function test_can_filter_listing_in_specific_dates()
-    {
-        factory(Listing::class,2)->create(['title'=>'Created today','created_at' => Carbon::today()]);
-        factory(Listing::class,2)->create(['title'=>'Created yesterday','created_at' => Carbon::yesterday()]);
-        factory(Listing::class,10)->create(['title'=>'Created yesterday','created_at' => Carbon::tomorrow()]);
-        $foundListings = ListingFilters::getListingsBySpecificDate( ['startDate'=>Carbon::yesterday(), 'endDate'=>Carbon::today()] );
+     /**
+      * Get listings with pending created certain date.
+      *
+      * @param   $date
+      * @return  $listings
+      */
+      public static function getListingsWithPendingByDate( $date = null )
+      {
+        if( $date )
+          return Listing::whereDate('created_at',$date)->get();
+        else
+          return Listing::all();
+      }
 
-        $this->assertEquals(count($foundListings),4);
-    }
+      /**
+       * Get pending listings  created certain date.
+       *
+       * @param   $date
+       * @return  $listings
+       */
+       public static function getPendingListingsByDate( $date = null )
+       {
+         if( $date )
+           return Listing::where('live',null)->whereDate('created_at',$date)->get();
+         else
+           return Listing::where('live',null)->get();
+       }
 
-    public function test_can_filter_listing_using_custom_filters()
-    {
-        factory(Listing::class,2)->create(['title'=>'Created today','created_at' => Carbon::today()]);
-        factory(Listing::class,2)->create(['title'=>'Created yesterday','created_at' => Carbon::yesterday()]);
-        factory(Listing::class,10)->create(['title'=>'Created yesterday','created_at' => Carbon::tomorrow()]);
-        $filters = [
-          'orderBy' => 'DESC',
-          'sortField' => 'id',
-          'startDate' => Carbon::yesterday(),
-          'endDate' => Carbon::today(),
-        ];
-        $foundListings = ListingFilters::getListings( $filters );
 
-        $retrivedListings = Listing::whereDate('created_at','>=',Carbon::yesterday())->whereDate('created_at','<=',Carbon::today())->get();
-        $this->assertEquals($foundListings[0]['id'],$retrivedListings[3]['id']);
-    }
+     /**
+      * Get listings created during specific dates.
+      *
+      * @param   $startDate and $endDate
+      * @return  $listings
+      */
+      public static function getListingsBySpecificDate( $filters = [] )
+      {
+        $values = self::getListingSpecifiedDatesVariables( $filters );
+        return Listing::where('live',1)->whereDate( $values['sortDateField'],$values['operandA'],$values['startDate'] )->whereDate( $values['sortDateField'],$values['operandB'],$values['endDate'] )->get();
+      }
+
+      /**
+       * Get listings with pending created during specific dates.
+       *
+       * @param   $startDate and $endDate
+       * @return  $listings
+       */
+       public static function getListingsWithPendingBySpecificDate( $filters = [] )
+       {
+         $values = self::getListingSpecifiedDatesVariables( $filters );
+         return Listing::whereDate( $values['sortDateField'],$values['operandA'],$values['startDate'] )->whereDate( $values['sortDateField'],$values['operandB'],$values['endDate'] )->get();
+       }
+
+       /**
+        * Get pending listings created during specific dates.
+        *
+        * @param   $startDate and $endDate
+        * @return  $listings
+        */
+        public static function getPendingListingsBySpecificDate( $filters = [] )
+        {
+          $values = self::getListingSpecifiedDatesVariables( $filters );
+          return Listing::where('live',null)->whereDate( $values['sortDateField'],$values['operandA'],$values['startDate'] )->whereDate( $values['sortDateField'],$values['operandB'],$values['endDate'] )->get();
+        }
+
+      /**
+       * Get listings based on supplied filters.
+       *
+       * @param  array $filters
+       * @return array $listings
+       */
+       public static function getListings( $filters = [] )
+       {
+         $orderValues = self::getOrderByVariables( $filters );
+         $dateValues = self::getListingSpecifiedDatesVariables( $filters );
+         return Listing::orderBy( $orderValues['sortField'], $orderValues['orderBy'] )
+                        ->where( $dateValues['sortDateField'],$dateValues['operandA'],$dateValues['startDate'] )
+                        ->where( $dateValues['sortDateField'],$dateValues['operandB'],$dateValues['endDate'] )
+                        ->where('live',1)
+                        ->get();
+       }
+
+       /**
+        * Get listings with pending based on supplied filters.
+        *
+        * @param  array $filters
+        * @return array $listings
+        */
+        public static function getListingsWithPending( $filters = [] )
+        {
+          $orderValues = self::getOrderByVariables( $filters );
+          $dateValues = self::getListingSpecifiedDatesVariables( $filters );
+          return Listing::orderBy( $orderValues['sortField'], $orderValues['orderBy'] )
+                         ->where( $dateValues['sortDateField'],$dateValues['operandA'],$dateValues['startDate'] )
+                         ->where( $dateValues['sortDateField'],$dateValues['operandB'],$dateValues['endDate'] )
+                         ->get();
+        }
+
+        /**
+         * Get listings based on supplied filters.
+         *
+         * @param  array $filters
+         * @return array $listings
+         */
+         public static function getPendingListings( $filters = [] )
+         {
+           $orderValues = self::getOrderByVariables( $filters );
+           $dateValues = self::getListingSpecifiedDatesVariables( $filters );
+           return Listing::orderBy( $orderValues['sortField'], $orderValues['orderBy'] )
+                          ->where( $dateValues['sortDateField'],$dateValues['operandA'],$dateValues['startDate'] )
+                          ->where( $dateValues['sortDateField'],$dateValues['operandB'],$dateValues['endDate'] )
+                          ->where('live',null)
+                          ->get();
+         }
+
+       /**
+        * Get fields to sort listing.
+        *
+        * @param  array $filters
+        * @return array $filters
+        */
+       protected static function getOrderByVariables( $filters = [] )
+       {
+         $sortField = 'id';$sortBy='DESC';
+         if( isset($filters['sortField']) && isset($filters['orderBy']) )
+         {
+           $sortField = $filters['sortField'];
+           $sortBy=$filters['orderBy'];
+         }
+
+         elseif( !isset($filters['sortField']) && isset($filters['orderBy']) )
+         {
+           $sortBy=$filters['orderBy'];
+         }
+
+
+         elseif( isset($filters['sortField']) && !isset($filters['orderBy']) )
+         {
+           $sortField = $filters['sortField'];
+         }
+
+         $filters['sortField'] = $sortField;
+         $filters['orderBy'] = $sortBy;
+
+         return $filters;
+
+       }
+
+
+       /**
+        * Get fields to sort listing.
+        *
+        * @param  array $filters
+        * @return array $filters
+        */
+       protected static function getListingSpecifiedDatesVariables( $filters = [] )
+       {
+         $startDate = null;
+         $endDate = null;
+         $sortDateField = self::$sortDatesByField;
+         $operandA = '<>';
+         $operandB = '<>';
+
+         if( isset($filters['startDate']) && isset($filters['endDate']) )
+         {
+           $startDate = $filters['startDate'];
+           $endDate = $filters['endDate'];
+           $operandA = '>=';
+           $operandB = '<=';
+         }
+
+         elseif( !isset($filters['startDate']) && isset($filters['endDate']) )
+         {
+           $endDate = $filters['endDate'];
+           $operandB = '<=';
+         }
+
+
+         elseif( isset($filters['startDate']) && !isset($filters['endDate']) )
+         {
+           $startDate = $filters['startDate'];
+           $operandA = '>=';
+         }
+
+         $filters['startDate'] = $startDate;
+         $filters['endDate'] = $endDate;
+         $filters['operandA'] = $operandA;
+         $filters['operandB'] = $operandB;
+         $filters['sortDateField'] = $sortDateField;
+
+         return $filters;
+
+       }
 }
